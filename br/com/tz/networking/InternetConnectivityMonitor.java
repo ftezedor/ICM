@@ -1,9 +1,18 @@
 /*
- * Copyright (c) 2018, Fabio Tezedor. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ * Copyright (c) 2018, Fabio Tezedor <fabio@tezedor.com.br>
  *
  * Tue May 19 2018
  *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 as published by
+ * the Free Software Foundation.
+ * 
+ * https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * 
+ * "Free software is a matter of liberty, not price. To understand the concept, 
+ * you should think of free as in free speech, not as in free beer." — Richard Stallman
+ *
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  */
 package br.com.tz.networking;
 
@@ -14,19 +23,28 @@ import java.util.Arrays;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
 
-/*
+/* In order to up my skills regarding threads, I came up with this idea of developing 
+ * an app whose unique purpose would be to monitor the connectivity to the internet. 
+ * The first version came to life in two weeks or so but, from time to time, a new idea 
+ * pops up in my head and I get back to this code.
+ * Thus, over the years, some features were added and improvements were made.
+ * Nevertheless, I believe more could be done and probably there are some bugs to be fixed.
+ * Nonetheless, I'd say it has already satisfied my initial intent so, that's it (for now).
+ * 
  * history
  * 
+ *    May, 2018
+ *       first release
  *    Sep, 2018
  *       the start, pause, resume, and stop of the monitor was manually commanded.
- *       it's up to the clients to get ICM started, paused, resumed, or stopped.
+ *       it's up to clients to get ICM started, paused, resumed, or stopped.
  *    May, 2019
  *       the start, pause, resume, and stop are now called automatically by the monitor itself.
  *       when registering the first foreign listener, the monitor is automatically initiated.
  *       when the last foreign listener is removed, the monitor is automatically put on hold.
  *    Aug, 2019
  *       the HttpURLConnection object that was being recreated repeatedly for each and every 
- *       url in the run() method had its creation moved to the UrlNode class constructor so, 
+ *       url in the run() method. its creation was moved to the UrlNode class' constructor so, 
  *       the connection now is created only once when the UrlNode object  is  created  thus, 
  *       delegating to the run() method just the task of connecting to the website.
  *    Apr, 2020
@@ -107,11 +125,9 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 	private static InternetConnectivityMonitor icmInst = SingletonHelper.INSTANCE;
 	private static Thread icmThread = new Thread(icmInst, "ICM-Thread");
 	// list to hold registered listeners
-	//private static java.util.List<InternetConectivityChangeListener> listeners = new ArrayList<InternetConectivityChangeListener>();
 	private static java.util.List<ListenerNotifier> listeners = new ArrayList<ListenerNotifier>();
 
 	// this is a singleton class and that's why the constructor is private
-	//private InternetConnectivityMonitor()
 	protected InternetConnectivityMonitor()
 	{
 		if (System.getProperty("icm.verbose") != null)
@@ -212,37 +228,19 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 	{
 		final boolean debugMode = true;
 
-		System.out.println(	"Copyright (c) Fabio Tezedor, 2018\n"
+		System.out.println(	"Copyright (c) 2018 Fabio Tezedor\n"
 				+ "\n*** to see the connection turning offline/online, disable/re-enable your networking ***" );
 
 		if (!debugMode) return;
 
-		// System.out.println("\n" + InternetConnectivityMonitor.getConfiguration() +
-		// "\n");
-
-		// the lines below set 4 timers to change the static field 'simulation'
-		// in order to simulate the break of the internet connectivity
-//		Environment.timer.schedule( createSimulationTimerTask(true),  11000);
-//		Environment.timer.schedule( createSimulationTimerTask(false), 21000);
-//		Environment.timer.schedule( createSimulationTimerTask(true),  43000);
-//		Environment.timer.schedule( createSimulationTimerTask(false), 51000);
-		
 		try
 		{
-			// System.out.println("\n" + InternetConnectivityMonitor.getState().toString());
 			System.out.println("\nStarting the one-minute long self-testing\n");
-			// InternetConnectivityMonitor.setVerboseOn();
 			start();
 			System.out.println("The Internet Connectivity Monitor has been started");
 
 			Thread.sleep(60000);
 			
-//			Thread.sleep(30000);
-//			pause();
-//			Thread.sleep(10000);
-//			resume();
-//			Thread.sleep(30000);
-
 			if (stop())
 			{
 				System.out.println("The Internet Connectivity Monitor has been stopped");
@@ -280,18 +278,6 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 						"You (" + listener.getClass().getName() + "@" + listener.getClass().hashCode() + ") again?");
 			return;		
 		}
-		// check the listener against the ones already registered to prevent duplicates
-//		for (int i = 0; i < listeners.size(); i++)
-//		{
-//			if (listeners.get(i).equals(listener))
-//			{
-//				if (verbose)
-//				{
-//					System.out.println("You (" + listener.getClass().getName() + "@" + listener.getClass().hashCode() + ") again?");
-//				}
-//				return;
-//			}
-//		}
 
 		// start monitoring if the listener being added is not the monitor itself
 		if ( !listener.equals(icmInst) ) start();
@@ -304,8 +290,10 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 		}
 		else
 		{
-			//listeners.add( new ThreadedListenerNotifier(listener) );
-			listeners.add( new PooledListenerNotifier(listener) );
+			if ( Configuration.maxListenersNumber > 10 )
+				listeners.add( new PooledListenerNotifier(listener) );
+			else
+				listeners.add( new ThreadedListenerNotifier(listener) );
 		}
 
 		if (verbose)
@@ -394,9 +382,15 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 		// just in case it is, before trying to stop it
 		resume();
 		// signaling it to stop
-		if (icmInst.running) icmInst.running = false;
+		if (icmInst.running) 
+		{
+			icmInst.running = false;
+			//icmThread.interrupt();
+		}
+		int wctr = 120;
 		// wait for the thread to leave method run(). it wouldn't take long.
-		while (icmThread.isAlive())
+		// odd bug is preventing icmThread to terminate on its own so the counter
+		while (icmThread.isAlive() && wctr-- > 0)
 		{
 			// let's wait for a little while before checking icmThread once more
 			try
@@ -468,41 +462,9 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 		online = (event > 0);
 		// traverse the listeners list and notify each and every one
 		listeners.stream().filter(l -> l != null).forEach( l -> l.notify(evt, (simulate ? ICMStatus.OFFLINE : stt)) );
-//				{
-//					//if ( verbose ) System.out.println("Notifying " + l.getClass() + " about the occurred event");
-//					notifyListener( l, evt, (simulate ? ICMStatus.OFFLINE : stt) );
-//					//if ( verbose ) System.out.println("Notifying " + l.getClass() + " about connectivity status change");		
-//				} );
+
 	}
 	
-	/**
-	 * Delegates the notification to a separate thread
-	 * 
-	 * @param l - the listener
-	 * @param e - the triggered event
-	 * @param s - the connectivity status
-	 */
-
-	/*
-	public void notifyListener( final InternetConectivityChangeListener l, final ICMEvent e, final ICMStatus s )
-	{
-		if ( Configuration.notificationMode.equalsIgnoreCase("parallel"))
-		{
-			Thread t = new Thread() {
-				@Override
-				public void run() {
-					l.onIcmStatusChange(e, s);
-				}
-			};
-			t.setDaemon(true);
-			t.start();
-		}
-		else
-		{
-			l.onIcmStatusChange( e, (simulate ? ICMStatus.OFFLINE : s) );
-		}
-	}
-	*/
 
 	/**
 	 * The main method that does the actual job
@@ -633,22 +595,27 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 				} 
 				else
 				{
+					//System.out.println("-x-x-x-( 01 )-x-x-x-");
 					//e.printStackTrace();
 					// if status is online, report connection failure
 					// once the connection failed the status must be reported as unknown
 					if (icmInst.online) notifyListeners(ICMEvent.CON_FAILURE, ICMStatus.UNKNOWN);
-
+					//System.out.println("-x-x-x-( 02 )-x-x-x-");
 					failCounter++; // increase the failure counter
-
+					//System.out.println("-x-x-x-( 03 )-x-x-x-");
 					try
 					{
+						//System.out.println("-x-x-x-( 04 )-x-x-x-");
 						// even if waitOnFailure is false, it's better sleep a  
 						// bit so, let's make fsi_l1 = 100 (tenth of a second)
 						if ( ! Configuration.waitOnFailure ) fsi_l1 = 100;
+						//System.out.println("-x-x-x-( 05 )-x-x-x-");
 						Thread.sleep(((online || failCounter <= fmn_l1 ? fsi_l1 : (failCounter > fmn_l2 ? fsi_l3 : fsi_l2))));
+						//System.out.println("-x-x-x-( 06 )-x-x-x-");
 					} 
 					catch (InterruptedException e1)
 					{
+						//System.out.println("-x-x-x-( 07 )-x-x-x-");
 					}
 				}
 			} 
@@ -656,7 +623,6 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 			{
 				ie.printStackTrace();
 			}
-
 			// if global failure counter is equal or greater than fmn_l1, notify
 			if (failCounter >= fmn_l1)
 			{
@@ -667,9 +633,12 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 				}
 			}
 		}
+		
+		System.out.println("going to leave (1)");
 
 		state = State.STOPPED;
 		notifyListeners(ICMEvent.MON_STOPPED, (icmInst.online ? ICMStatus.ONLINE : ICMStatus.OFFLINE));
+		System.out.println("going to leave (2)");
 	}
 
 //	public static void terminate()
@@ -699,17 +668,6 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 	/*
 	 * ICM's supporting classes
 	 */
-	
-//	private static final class ListenerEntry
-//	{
-//		public final InternetConectivityChangeListener listener;
-//		public long last = 0;
-//		
-//		public ListenerEntry(InternetConectivityChangeListener listener)
-//		{
-//			this.listener = listener;
-//		}
-//	}
 	
 	/**
 	 * Bill Pugh Singleton approach. 
