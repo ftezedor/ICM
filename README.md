@@ -16,6 +16,29 @@ Nonetheless, I'd say it has already satisfied my initial intent so, that's it (f
 - simple-xml-2.7.1.jar (for config deserialization)
 - log4j 2.11.1 (core and api) for logging stout and stderr
 
+### Testing
+ICM has a main method intended to perform a self-test
+```
+$ java -cp .:/path/to/simple-xml-2.7.1.jar br.com.tz.networking.InternetConnectivityMonitor
+Copyright (c) 2018 Fabio Tezedor
+
+*** to see the connection turning offline/online, disable/re-enable your networking ***
+
+Starting the one-minute long self-testing
+
+The Internet Connectivity Monitor has been started
+Event occurred: CON_CHANGED, Connectivity status: OFFLINE
+Event occurred: MON_STARTED, Connectivity status: OFFLINE
+Event occurred: CON_CHANGED, Connectivity status: ONLINE
+Event occurred: CON_FAILURE, Connectivity status: UNKNOWN
+Event occurred: CON_FAILURE, Connectivity status: UNKNOWN
+Event occurred: CON_FAILURE, Connectivity status: UNKNOWN
+Event occurred: CON_CHANGED, Connectivity status: OFFLINE
+Event occurred: CON_CHANGED, Connectivity status: ONLINE
+
+The self-testing has finished
+```
+
 ### Usage
 ```
 package br.com.tz.testing;
