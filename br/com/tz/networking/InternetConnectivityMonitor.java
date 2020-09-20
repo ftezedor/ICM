@@ -191,7 +191,7 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 			Configuration.waitOnFailure              = icmCfg.getWaitOnFailure();
 			Configuration.notificationMode           = icmCfg.getNotificantionMode();
 			Configuration.urls = icmCfg.getUrls();
-			// since urls were load from config file set innerUrlsInUse = false
+			// since urls were loaded from config file, set innerUrlsInUse = false
 			innerUrlsInUse = false;
 		}
 
