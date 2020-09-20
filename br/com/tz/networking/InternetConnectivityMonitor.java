@@ -1,18 +1,9 @@
 /*
- * Copyright (c) 2018, Fabio Tezedor <fabio@tezedor.com.br>
+ * Copyright (c) 2018, Fabio Tezedor. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * Tue May 19 2018
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 as published by
- * the Free Software Foundation.
- * 
- * https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- * 
- * "Free software is a matter of liberty, not price. To understand the concept, 
- * you should think of free as in free speech, not as in free beer." — Richard Stallman
- *
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  */
 package br.com.tz.networking;
 
@@ -23,28 +14,19 @@ import java.util.Arrays;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
 
-/* In order to up my skills regarding threads, I came up with this idea of developing 
- * an app whose unique purpose would be to monitor the connectivity to the internet. 
- * The first version came to life in two weeks or so but, from time to time, a new idea 
- * pops up in my head and I get back to this code.
- * Thus, over the years, some features were added and improvements were made.
- * Nevertheless, I believe more could be done and probably there are some bugs to be fixed.
- * Nonetheless, I'd say it has already satisfied my initial intent so, that's it (for now).
- * 
+/*
  * history
  * 
- *    May, 2018
- *       first release
  *    Sep, 2018
  *       the start, pause, resume, and stop of the monitor was manually commanded.
- *       it's up to clients to get ICM started, paused, resumed, or stopped.
+ *       it's up to the clients to get ICM started, paused, resumed, or stopped.
  *    May, 2019
  *       the start, pause, resume, and stop are now called automatically by the monitor itself.
  *       when registering the first foreign listener, the monitor is automatically initiated.
  *       when the last foreign listener is removed, the monitor is automatically put on hold.
  *    Aug, 2019
  *       the HttpURLConnection object that was being recreated repeatedly for each and every 
- *       url in the run() method. its creation was moved to the UrlNode class' constructor so, 
+ *       url in the run() method had its creation moved to the UrlNode class constructor so, 
  *       the connection now is created only once when the UrlNode object  is  created  thus, 
  *       delegating to the run() method just the task of connecting to the website.
  *    Apr, 2020
@@ -270,8 +252,6 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 				System.err.println("The Internet Connectivity Monitor couldn't be stopped");
 			}
 
-			//Thread.sleep(30000);
-			
 			System.out.println("\nThe self-testing has finished");
 		} 
 		catch (InterruptedException e)
@@ -324,10 +304,8 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 		}
 		else
 		{
-			if ( Configuration.maxListenersNumber > 10 )
-				listeners.add( new PooledListenerNotifier(listener) );
-			else
-				listeners.add( new ThreadedListenerNotifier(listener) );
+			//listeners.add( new ThreadedListenerNotifier(listener) );
+			listeners.add( new PooledListenerNotifier(listener) );
 		}
 
 		if (verbose)
@@ -414,17 +392,11 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 
 		// since thread might be paused let's invoke the resume() method, 
 		// just in case it is, before trying to stop it
-		//resume();
+		resume();
 		// signaling it to stop
-		if (icmInst.running) 
-		{
-			icmInst.running = false;
-			//icmThread.interrupt();
-		}
-		int wctr = 120;
+		if (icmInst.running) icmInst.running = false;
 		// wait for the thread to leave method run(). it wouldn't take long.
-		// odd bug is preventing icmThread to terminate on its own so the counter
-		while (icmThread.isAlive() && wctr-- > 0)
+		while (icmThread.isAlive())
 		{
 			// let's wait for a little while before checking icmThread once more
 			try
@@ -661,27 +633,22 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 				} 
 				else
 				{
-					System.out.println("-x-x-x-( 01 )-x-x-x-");
 					//e.printStackTrace();
 					// if status is online, report connection failure
 					// once the connection failed the status must be reported as unknown
 					if (icmInst.online) notifyListeners(ICMEvent.CON_FAILURE, ICMStatus.UNKNOWN);
-					System.out.println("-x-x-x-( 02 )-x-x-x-");
+
 					failCounter++; // increase the failure counter
-					System.out.println("-x-x-x-( 03 )-x-x-x-");
+
 					try
 					{
-						System.out.println("-x-x-x-( 04 )-x-x-x-");
 						// even if waitOnFailure is false, it's better sleep a  
 						// bit so, let's make fsi_l1 = 100 (tenth of a second)
 						if ( ! Configuration.waitOnFailure ) fsi_l1 = 100;
-						System.out.println("-x-x-x-( 05 )-x-x-x-");
 						Thread.sleep(((online || failCounter <= fmn_l1 ? fsi_l1 : (failCounter > fmn_l2 ? fsi_l3 : fsi_l2))));
-						System.out.println("-x-x-x-( 06 )-x-x-x-");
 					} 
 					catch (InterruptedException e1)
 					{
-						System.out.println("-x-x-x-( 07 )-x-x-x-");
 					}
 				}
 			} 
@@ -689,6 +656,7 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 			{
 				ie.printStackTrace();
 			}
+
 			// if global failure counter is equal or greater than fmn_l1, notify
 			if (failCounter >= fmn_l1)
 			{
@@ -699,12 +667,9 @@ public class InternetConnectivityMonitor implements Runnable, InternetConectivit
 				}
 			}
 		}
-		
-		System.out.println("going to leave (1)");
 
 		state = State.STOPPED;
 		notifyListeners(ICMEvent.MON_STOPPED, (icmInst.online ? ICMStatus.ONLINE : ICMStatus.OFFLINE));
-		System.out.println("going to leave (2)");
 	}
 
 //	public static void terminate()
