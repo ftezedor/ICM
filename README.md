@@ -1,15 +1,20 @@
 # ICM
 Internet Connectivity Monitor
 
-## Licence
+### Licence
+GNU General Public License v2.0
 
+### About
+In order to up my skills regarding threads, I came up with this idea of developing an app whose unique purpose would be to monitor the connectivity to the internet.<br>
+The first version came to life in two weeks or so but, from time to time, a new idea pops up in my head and I get back to this code.<br>
+Thus, over the years, some features were added and improvements were made.<br>
+Nevertheless, I believe more could be done and probably there are some bugs to be fixed.<br>
+Nonetheless, I'd say it has already satisfied my initial intent so, that's it (for now).
 
-## Introduction
-In order to up my skills regarding threads, I came up with this idea of developing an app whose unique purpose would be to monitor the connectivity to the internet. 
-The first version came to life in two weeks or so but, from time to time, a new idea pops up in my head and I get back to this code.
-Thus, over the years, some features were added and improvements were made.
-Nevertheless, I believe more could be done and probably there are some bugs to be fixed.
-Nonetheless, I'd say it has already satisfied my initial intent so, that's it (for now)
+### Dependencies
+- Java 1.8.0_261 or later
+- simple-xml-2.7.1.jar (for config deserialization)
+- log4j 2.11.1 (core and api) for logging stout and stderr
 
 ### Usage
 ```
