@@ -14,7 +14,7 @@ Nonetheless, I'd say it has already satisfied my initial intent so, that's it (f
 ### Dependencies
 - Java 1.8.0_261 or later
 - simple-xml-2.7.1.jar (for config deserialization)
-- log4j 2.11.1 (core and api) for logging stout and stderr
+- log4j 2.11.1 (core and api) for logging stdout and stderr
 
 ### Testing
 ICM has a main method intended to perform a self-test
